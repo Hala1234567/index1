@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - appwebhala
+name: Build and deploy PHP app to Azure Web App - Appwebhala
 
 on:
   push:
@@ -11,28 +11,33 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          node-version: '4.8'
+          php-version: '8.4'
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
-      
+      - name: Check if composer.json exists
+        id: check_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: 'composer.json'
+
+      - name: Run composer install if composer.json exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
+          name: php-app
           path: .
 
   deploy:
@@ -46,20 +51,20 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: php-app
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D114BDEF942A42A48940B42A22298A32 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FD1D66691B8B4B78AE72B57C90052683 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1CCFAA3963504002AD927703B3B7F274 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7ADDC47DFA554D108413F3F7A0AC1824 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F13E1D02FC374D7F8E2B82D8F61AB69F }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6B67261BA81D438A9781024EDDA58495 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'appwebhala'
+          app-name: 'Appwebhala'
           slot-name: 'Production'
           package: .
           
